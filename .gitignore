@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+linear_regression/correct_trainer/correct_trainer.zip
+linear_regression/correct_trainee/correct_trainee.zip
+algorithm_contest/sorting/Uczenie_Maszynowe.zip
+linear_regression/regressor/regressor.zip
