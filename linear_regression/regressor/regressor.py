@@ -5,12 +5,12 @@ import random
 import argparse
 
 
-K_FOLDS = 8
+K_FOLDS = 10
 LEARNING_RATE = 0.1
 MAX_STOP_CONDITION = 100
 MOMENTUM = 0.9
-N_EPOCH = 5000
-HIDDEN_NEURONS = [2, 3, 4, 6, 8, 10, 20]
+N_EPOCH = 30000
+HIDDEN_NEURONS = [1, 2, 3, 4, 6, 8, 10, 13, 16, 17, 23, 31]
 
 
 def normalize_value(value, min_value, max_value):
@@ -44,18 +44,17 @@ def normalize_data(data, min_values, max_values):
     return data
 
 
-def generate_folds(data, k_folds):
-    random.shuffle(data)
-    return [data[i::k_folds] for i in range(k_folds)]
-    # folds = []
-    # avg = len(data) / float(k_folds)
-    # last = 0.0
-    
-    # while last < len(data):
-    #     folds.append(data[int(last):int(last + avg)])
-    #     last += avg
-
-    # return folds
+def generate_folds(data):
+    dataset_split = list()
+    dataset_copy = list(data)
+    fold_size = int(len(data) / K_FOLDS)
+    for i in range(K_FOLDS):
+        fold = list()
+        while len(fold) < fold_size:
+            index = random.randrange(len(dataset_copy))
+            fold.append(dataset_copy.pop(index))
+        dataset_split.append(fold)
+    return dataset_split
 
 
 def sigmoid(x):
@@ -74,11 +73,11 @@ def activate(inputs, weights):
 
 
 def train(training_set, weights_ih, weights_ho, n_inputs, n_hidden):
-    values = []
+    values = [0 for i in range(n_hidden)]
 
     for input_values in training_set:
         for hidden_index in range(n_hidden):
-            values.append(sigmoid(activate(input_values, weights_ih["weights"][hidden_index])))
+            values[hidden_index] = sigmoid(activate(input_values, weights_ih["weights"][hidden_index]))
 
         output_value = activate(values, weights_ho["weights"])
         hidden_gradient = output_value - input_values[-1]
@@ -86,21 +85,26 @@ def train(training_set, weights_ih, weights_ho, n_inputs, n_hidden):
         for hidden_index in range(n_hidden):
             input_gradient = hidden_gradient * weights_ho["weights"][hidden_index] * derivative_sigmoid(values[hidden_index])
 
-            for input_index in range(n_inputs + 1):
-                if input_index == n_inputs:
-                    delta = -LEARNING_RATE * input_gradient
-                else:
-                    delta = -LEARNING_RATE * input_gradient * input_values[input_index]
-                weights_ih["weights"][hidden_index][input_index] += delta + (MOMENTUM * weights_ih["deltas"][hidden_index][input_index])
-                weights_ih["deltas"][hidden_index][input_index] = delta
-                
-            delta = -LEARNING_RATE * hidden_gradient * values[hidden_index]
-            weights_ho["weights"][hidden_index] += delta + (MOMENTUM * weights_ho["deltas"][hidden_index])
-            weights_ho["deltas"][hidden_index] = delta
-            
-        delta = -LEARNING_RATE * hidden_gradient
-        weights_ho["weights"][-1] += delta + (MOMENTUM * weights_ho["deltas"][-1])
-        weights_ho["deltas"][-1] = delta
+            for input_index in range(n_inputs):              
+                prev_in_delta = weights_ih["deltas"][hidden_index][input_index]
+                current_in_delta = -LEARNING_RATE * input_gradient * input_values[input_index]
+                weights_ih["deltas"][hidden_index][input_index] = current_in_delta
+                weights_ih["weights"][hidden_index][input_index] += current_in_delta + (MOMENTUM * prev_in_delta)
+
+            prev_in_delta = weights_ih["deltas"][hidden_index][-1]
+            current_in_delta = -LEARNING_RATE * input_gradient
+            weights_ih["deltas"][hidden_index][-1] = current_in_delta
+            weights_ih["weights"][hidden_index][-1] += current_in_delta + (MOMENTUM * prev_in_delta)
+
+            prev_hid_delta = weights_ho["deltas"][hidden_index]
+            current_hid_delta = -LEARNING_RATE * hidden_gradient * values[hidden_index]
+            weights_ho["deltas"][hidden_index] = current_hid_delta
+            weights_ho["weights"][hidden_index] += current_hid_delta + (MOMENTUM * prev_hid_delta)
+
+        prev_hid_delta = weights_ho["deltas"][-1]
+        current_hid_delta = -LEARNING_RATE * hidden_gradient
+        weights_ho["deltas"][-1] = current_hid_delta
+        weights_ho["weights"][-1] += current_hid_delta + (MOMENTUM * prev_hid_delta)
 
 
 def validate(validation_set, weights_ih, weights_ho, n_inputs, n_hidden):    
@@ -113,9 +117,9 @@ def validate(validation_set, weights_ih, weights_ho, n_inputs, n_hidden):
 
 
 def forward_propagate(value, weights_ih, weights_ho, n_inputs, n_hidden):
-    values = []
+    values = [0 for i in range(n_hidden)]
     for hidden_index in range(n_hidden):
-        values.append(sigmoid(activate(value, weights_ih[hidden_index])))
+        values[hidden_index] = sigmoid(activate(value, weights_ih[hidden_index]))
     output_value = activate(values, weights_ho)
     return output_value
 
@@ -169,7 +173,7 @@ def main(args):
     min_values, max_values = calculate_column_ranges(training_data)
     training_data = normalize_data(training_data, min_values, max_values)
     n_inputs = len(training_data[0]) - 1
-    folds = generate_folds(training_data, K_FOLDS)
+    folds = generate_folds(training_data)
 
     for line in sys.stdin:
         testing_data.append([float(x) for x in line.split()])
