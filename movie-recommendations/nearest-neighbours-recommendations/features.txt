@@ -1,0 +1,9 @@
+Wektor cech:
+1. binarna lista wszystkich gatunków z wartościami 1 w miejscach występowania gatunków przypisanych do danego filmu 
+2. binarna lista wszystkich aktorów z wartościami 1 w miejscach występowania 5 głównych aktorów spośród obsady danego filmu
+3. binarna lista wszystkich reżyserów z wartością 1 w miejscu reżysera danego filmu
+4. binarna lista wszystkich słów kluczowych z wartościami 1 w miejscach występowania słów przypisanych do danego filmu
+5. binarna lista wszystkich krajów produkcji z wartościami 1 w miejscach krajów produkcji danego filmu
+6. znormalizowana warotść budżetu w przedziale (0,1)
+7. znormalizowana wartość popularności w przedziale (0,1)
+8. znormalizowana wartość czasu trwania w przedziale (0,1)

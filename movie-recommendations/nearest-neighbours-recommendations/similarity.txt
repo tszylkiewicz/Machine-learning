@@ -1,0 +1,9 @@
+Miary podobieństwa:
+1. podobieństwo cosinusowe
+2. podobieństwo cosinusowe
+3. podobieństwo cosinusowe
+4. podobieństwo cosinusowe
+5. podobieństwo cosinusowe
+6. odległość euklidesowa
+7. odległość euklidesowa
+8. odległość euklidesowa
