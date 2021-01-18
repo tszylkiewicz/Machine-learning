@@ -1,0 +1,3 @@
+Miara podobieństwa:
+Podobieństwo pomiędzy użytkownikami obliczane jest za pomocą współczynnika korelacji liniowej Pearsona. 
+Do obliczeń została wykorzystana funkcja wbudowana w bibliotekę "pandas", która oblicza współczynniki na odpowiednio przygotowanej tabeli.  

@@ -1,0 +1,3 @@
+Agregacja polega na przekształceniu oryginalnej tabeli, która posiada oryginalnie wczytane dane do postaci, w której columny odpowiadają kolejnym użytkownikom, wiersze odpowiadają filmom, a wartości w tableli to oceny wystawione danym filmom przez użytkownika.
+Na w ten sposób przedstawionej tabeli można wykonać funkcję corr, która na podstawie ocen oblicza podobieństwo pomiędzy użytkownikami. 
+Następnie dla każdego wiersza ze zbioru testowego pobierani są z tabeli użytkownicy podobni użytkownicy posortowani w malejącej kolejności względem podobieństwa i na podstawie ich ocen liczona jest przewidywana ocena.  
