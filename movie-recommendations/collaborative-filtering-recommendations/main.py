@@ -9,64 +9,13 @@ import matplotlib.pyplot as plt
 
 from sklearn.metrics import mean_squared_error
 
-K = 5
-N_EPOCH = 20
-LEARNING_RATE = 0.4
-
-# def calculate_gradient(values, loss, mask):
-#     result = []
-
-#     for i in range(len(values)):
-#         arr = []
-#         for j in range(len(loss[0])):
-#             value = 0
-#             iter = 0
-#             for k in range(len(loss)):
-#                 if mask[k, j]:   # liczenie gradientu tylko dla ocenionych filmów
-#                     value += values[i, k] * loss[k, j]
-#                     iter += 1
-#             arr.append(value / iter)
-#         result.append(np.array(arr))
-
-#     return np.array(result)
-
-
-# def calculate_cost(loss):
-#     m = 0
-#     result = 0
-#     for i in range(len(loss)):
-#         for j in range(len(loss[i])):
-#             # sprawdzenie czy nie jest NaN: NaN == NaN = false (w przypadku braku oceny)
-#             if loss[i, j] == loss[i, j]:
-#                 m += 1
-#                 result += loss[i, j] ** 2
-#     return result / m / 2
-
-
-# def gradient_descent(inputs, expected, weights, mask):
-#     costs = []
-#     for i in range(N_EPOCH):
-#         outputs = inputs.dot(weights)
-#         loss = outputs - expected
-
-#         gradient_i = calculate_gradient(weights, loss.T, mask.T)
-#         gradient_w = calculate_gradient(inputs.T, loss, mask)
-
-#         weights = weights - gradient_w * LEARNING_RATE
-#         inputs = inputs - gradient_i.T * LEARNING_RATE
-
-#         cost = calculate_cost(loss)
-
-#         for j in range(len(inputs)):
-#             inputs[j][-1] = 1
-#         costs.append(cost)
-#         print(f'\rEpoch {i+1}/{N_EPOCH}', end='\r')
-
-#     return weights, inputs, costs
-
+K = 6
+N_EPOCH = 600
+LEARNING_RATE = 0.01
 
 def predictions(P, Q):
     return np.dot(P.T, Q)
+
 
 def rmse(prediction, ground_truth):
     prediction = prediction[ground_truth.nonzero()].flatten() 
@@ -94,18 +43,11 @@ def main(args):
     
     n_users, n_movies = ratings_matrix.shape  
     lmbda=0.1
-    # inputs = np.random.uniform(0, 1, [n_movies, K])
-    # weights = np.random.uniform(0, 1, [K, n_users])
 
     P = np.random.uniform(0, 1, [K, n_users])
     Q = np.random.uniform(0, 1, [K, n_movies])
 
     scores = ratings_matrix.fillna(0).to_numpy()
-    
-    # scores_mask = (~ratings_matrix.isnull()).to_numpy()
-
-    # for value in inputs:
-    #     value[-1] = 1
 
     train_error = []
     users, movies = scores.nonzero()
@@ -119,25 +61,21 @@ def main(args):
         train_rmse = rmse(predictions(P, Q), scores)
         train_error.append(train_rmse)
         print(f'\rEpoch {epoch+1}/{N_EPOCH}', end='\r')
-    # weights, inputs, costs = gradient_descent(inputs, scores, weights, scores_mask)
-        
-    # plt.plot(costs[10:])
-    # plt.show()
 
-    outputs = predictions(P, Q)
-    ratings_matrix = pd.DataFrame.from_records(outputs, columns=ratings_matrix.columns)
+    outputs = predictions(P, Q) 
+    test_output = pd.DataFrame.from_records(outputs, columns=ratings_matrix.columns)
+    print(ratings_matrix)
+    print(test_output)
 
     for index, row in task.iterrows():
-        print(str(index) + " / " + str(len(task.index)), end='\r')     
-        user = int(row['user_id'])
-        movie = int(row['movie_id'])
-        print(user)
-        print(movie)
-        score = ratings_matrix.loc[user, movie] * 5
+        print(str(index) + " / " + str(len(task.index)), end='\r')          
+        user = ratings_matrix.index.get_loc(row['user_id'])
+        movie = row['movie_id']
+        score = test_output.loc[user, movie] * 5
         if score < 0:
             score = 0
         if score > 5:
-            score = 5   
+            score = 5
          
         task.loc[index, 'rating'] = str(int(round(score)))        
 
