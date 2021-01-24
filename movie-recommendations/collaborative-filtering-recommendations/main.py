@@ -9,24 +9,19 @@ import matplotlib.pyplot as plt
 
 from sklearn.metrics import mean_squared_error
 
-K = 6
+K = 9
 N_EPOCH = 600
-LEARNING_RATE = 0.01
+LMBDA = 0.01
+LEARNING_RATE = 0.001
 
 def predictions(P, Q):
     return np.dot(P.T, Q)
 
 
 def rmse(prediction, ground_truth):
-    prediction = prediction[ground_truth.nonzero()].flatten() 
-    ground_truth = ground_truth[ground_truth.nonzero()].flatten()
+    prediction = prediction[np.where(ground_truth != -1)].flatten() 
+    ground_truth = ground_truth[np.where(ground_truth != -1)].flatten()
     return sqrt(mean_squared_error(prediction, ground_truth))
-
-
-def predict(X_train, user_index, P, Q):
-    y_hat = predictions(P, Q)
-    predictions_index = np.where(X_train[user_index, :] == 0)[0]
-    return y_hat[user_index, predictions_index].flatten()
 
 
 def main(args):
@@ -41,31 +36,28 @@ def main(args):
 
     ratings_matrix = train.pivot(index='user_id',columns='movie_id',values='rating')
     
-    n_users, n_movies = ratings_matrix.shape  
-    lmbda=0.1
+    n_users, n_movies = ratings_matrix.shape      
 
     P = np.random.uniform(0, 1, [K, n_users])
     Q = np.random.uniform(0, 1, [K, n_movies])
 
-    scores = ratings_matrix.fillna(0).to_numpy()
+    scores = ratings_matrix.fillna(-1).to_numpy()
 
     train_error = []
-    users, movies = scores.nonzero()
+    users, movies = np.where(scores != -1)
 
     for epoch in range(N_EPOCH):
-        for u, i in zip(users, movies):
-            error = scores[u, i] - predictions(P[:,u], Q[:,i])
-            P[:, u] += LEARNING_RATE * (error * Q[:, i] - lmbda * P[:, u])
-            Q[:, i] += LEARNING_RATE * (error * P[:, u] - lmbda * Q[:, i])
+        for user, movie in zip(users, movies):
+            error = scores[user, movie] - predictions(P[:,user], Q[:,movie])
+            P[:, user] += LEARNING_RATE * (error * Q[:, movie] - LMBDA * P[:, user])
+            Q[:, movie] += LEARNING_RATE * (error * P[:, user] - LMBDA * Q[:, movie])
 
         train_rmse = rmse(predictions(P, Q), scores)
         train_error.append(train_rmse)
         print(f'\rEpoch {epoch+1}/{N_EPOCH}', end='\r')
 
     outputs = predictions(P, Q) 
-    test_output = pd.DataFrame.from_records(outputs, columns=ratings_matrix.columns)
-    print(ratings_matrix)
-    print(test_output)
+    test_output = pd.DataFrame.from_records(outputs, columns=ratings_matrix.columns)    
 
     for index, row in task.iterrows():
         print(str(index) + " / " + str(len(task.index)), end='\r')          
