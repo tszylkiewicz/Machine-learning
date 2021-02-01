@@ -11,7 +11,7 @@ from sklearn.metrics import mean_squared_error
 
 K = 9
 N_EPOCH = 600
-LMBDA = 0.01
+REGULARIZATION = 0.01
 LEARNING_RATE = 0.001
 
 def predictions(P, Q):
@@ -49,8 +49,8 @@ def main(args):
     for epoch in range(N_EPOCH):
         for user, movie in zip(users, movies):
             error = scores[user, movie] - predictions(P[:,user], Q[:,movie])
-            P[:, user] += LEARNING_RATE * (error * Q[:, movie] - LMBDA * P[:, user])
-            Q[:, movie] += LEARNING_RATE * (error * P[:, user] - LMBDA * Q[:, movie])
+            P[:, user] += LEARNING_RATE * (error * Q[:, movie] - REGULARIZATION * P[:, user])
+            Q[:, movie] += LEARNING_RATE * (error * P[:, user] - REGULARIZATION * Q[:, movie])
 
         train_rmse = rmse(predictions(P, Q), scores)
         train_error.append(train_rmse)
